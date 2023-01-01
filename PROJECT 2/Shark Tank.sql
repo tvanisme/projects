@@ -122,33 +122,44 @@ where ashneeramountinvested is not null
 and ashneeramountinvested != 0) c
 
 --
-select m.keyy, m.total_deals_present, m.total_deals, n.total_amount_invested, n.avg_equity_taken
+select
+	m.keyy, 
+	m.total_deals_present,
+	m.total_deals, 
+	n.total_amount_invested,
+	n.avg_equity_taken
 from
+	(
+	select 
+		a.keyy, 
+		a.total_deals_present, 
+		b.total_deals
+	from
+		(
+		select 'Ashnee' as keyy, count(ashneeramountinvested) as total_deals_present from data
+		where ashneeramountinvested is not null
+		) a
+		inner join
+		(
+		select 'Ashnee'as keyy, count(ashneeramountinvested) as total_deals from data
+		where ashneeramountinvested is not null and ashneeramountinvested !=0
+		) b	on a.keyy = b.keyy
+	) m
 
-(select a.keyy, a.total_deals_present, b.total_deals
-from
+	inner join
 
-(select 'Ashnee' as keyy, count(ashneeramountinvested) as total_deals_present from data
-where ashneeramountinvested is not null)a
-
-inner join
-
-(select 'Ashnee'as keyy, count(ashneeramountinvested) as total_deals from data
-where ashneeramountinvested is not null and ashneeramountinvested !=0) b
-
-on a.keyy = b.keyy) m
-
-inner join
-
-(select 'Ashnee'as keyy, sum(c.ashneeramountinvested) as total_amount_invested,
-	avg(c.ashneerequitytakenp) as avg_equity_taken
-from
-(select * from data
-where ashneeramountinvested is not null
-and ashneeramountinvested != 0) c ) n
-
-on m.keyy = n.keyy
-
+	(
+		select 
+			'Ashnee'as keyy, 
+			sum(c.ashneeramountinvested) as total_amount_invested,
+			avg(c.ashneerequitytakenp) as avg_equity_taken
+		from
+		(
+			select * from data
+			where ashneeramountinvested is not null
+			and ashneeramountinvested != 0
+		) c 
+	) n on m.keyy = n.keyy
 --which is the startup in which the highest amount has been invested in each domain/sector
 
 select a.* 
@@ -157,3 +168,4 @@ from
 rank() over(partition by sector order by amountinvestedlakhs desc) rnk
 from data) a
 where rnk =1
+------------
